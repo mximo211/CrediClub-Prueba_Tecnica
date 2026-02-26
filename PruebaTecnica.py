@@ -3,9 +3,10 @@ import pathlib
 import pandas as pd
 import numpy as np
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 
-con = sqlite3.connect("databasesCrediclub.db")
+con = sqlite3.connect("databasesCrediclub.db", check_same_thread=False)
 con.row_factory = sqlite3.Row
 con.execute("PRAGMA foreign_keys = 1")
 
@@ -31,42 +32,47 @@ if counter.fetchone()[0] == 0:
 
 
 
-query = """
-SELECT 
-e.id,
-e.batch,
-e.customer_name,
-e.expected_date,
-e.amount as expectedPayment,
-r.amount as receivedPayment,
-r.received_date
-FROM expected_payments e 
-LEFT JOIN received_payments r ON e.id = r.expec_pay_id 
-WHERE e.batch = 'BA-202401';
-"""
+def conciliationDf(batch):
+    query = """
+        SELECT 
+        e.id,
+        e.batch,
+        e.customer_name,
+        e.expected_date,
+        e.amount as expectedPayment,
+        r.amount as receivedPayment,
+        r.received_date
+        FROM expected_payments e 
+        LEFT JOIN received_payments r ON e.id = r.expec_pay_id 
+        WHERE e.batch = ?;
+        """
 
-pruebaDf = pd.read_sql_query(query, con)
-conciliaciones = [
-    pruebaDf["receivedPayment"].isna(),
-    pruebaDf["receivedPayment"] != pruebaDf["expectedPayment"],
-    pruebaDf["expectedPayment"] == pruebaDf["receivedPayment"]
-]
+    df = pd.read_sql_query(query, con, params=(batch,))
+    conciliaciones = [
+        df["receivedPayment"].isna(),
+        df["receivedPayment"] != df["expectedPayment"],
+        df["expectedPayment"] == df["receivedPayment"]
+    ]
 
-resultado = [
-    'NO_RECIBIDO', 'MONTO_DIFERENTE', 'CONCILIADO'
-]
+    resultado = [
+        'NO_RECIBIDO', 'MONTO_DIFERENTE', 'CONCILIADO'
+    ]
 
-pruebaDf["Status"] = np.select(conciliaciones, resultado, 'Other')
-
-print(pruebaDf.head())
+    df["Status"] = np.select(conciliaciones, resultado, 'Other')
 
 
-# app = FastAPI()
+    return df
 
-# @app.get("/")
-# def root():
-#     return {"message": "API funciona"}
 
-# @app.post("/reconciliation")
-# def reconciliation(batch: str = "BA-202401"): 
-#     cur.execute("SELECT * FROM expected_payments")
+app = FastAPI()
+
+@app.post("/reconciliation")
+def reconciliation(batch: str): 
+
+    df = conciliationDf(batch)
+
+    writer = pd.ExcelWriter('Report.xlsx', mode='w',if_sheet_exists=None)
+    df.to_excel(writer, sheet_name='conciliation_sheet',index=False)
+    writer.close()
+
+    return FileResponse('Report.xlsx', media_type ='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', filename = 'Report.xlsx')
