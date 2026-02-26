@@ -1,0 +1,11 @@
+﻿id,batch,customer_name,amount,expected_date
+1,BA-202401,Juan Pérez,1500,05/01/2024
+2,BA-202401,María López,2350.5,05/01/2024
+3,BA-202401,Carlos Hernández,980.75,06/01/2024
+4,BA-202401,Ana Torres,4100,06/01/2024
+5,CH-202402,Luis Ramírez,3200,10/01/2024
+6,CH-202402,Sofía Martínez,875.25,10/01/2024
+7,CH-202402,Miguel Sánchez,1200,11/01/2024
+8,TC-202403,Daniela Flores,2600.9,15/01/2024
+9,TC -202403,Roberto Gómez,5400,15/01/2024
+10,TC-202403,Fernanda Ruiz,1999.99,16/01/2024
