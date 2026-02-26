@@ -2,6 +2,7 @@ import sqlite3
 import pathlib
 import pandas as pd
 import numpy as np
+import requests
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
@@ -71,8 +72,19 @@ def reconciliation(batch: str):
 
     df = conciliationDf(batch)
 
+    response = requests.get('https://v6.exchangerate-api.com/v6/d2e6dd3982783fddcfc973cc/latest/MXN') 
+    data = response.json() 
+    df['expectedPayment(USD)'] = data['conversion_rates']['USD'] * df['expectedPayment']
+    df['receivedPayment(USD)'] = data['conversion_rates']['USD'] * df['receivedPayment']
+
     writer = pd.ExcelWriter('Report.xlsx', mode='w',if_sheet_exists=None)
     df.to_excel(writer, sheet_name='conciliation_sheet',index=False)
     writer.close()
 
     return FileResponse('Report.xlsx', media_type ='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', filename = 'Report.xlsx')
+
+
+
+
+
+
