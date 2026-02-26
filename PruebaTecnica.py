@@ -1,10 +1,12 @@
 import sqlite3
 import pathlib
 import pandas as pd
-
+import numpy as np
+from fastapi import FastAPI
 
 
 con = sqlite3.connect("databasesCrediclub.db")
+con.row_factory = sqlite3.Row
 con.execute("PRAGMA foreign_keys = 1")
 
 cur = con.cursor()
@@ -27,5 +29,44 @@ if counter.fetchone()[0] == 0:
     cur.executemany("INSERT INTO received_payments (id, expec_pay_id, batch, amount, received_date) VALUES (?, ?, ?, ?, ?)", data)
     con.commit()
 
-con.close()
 
+
+query = """
+SELECT 
+e.id,
+e.batch,
+e.customer_name,
+e.expected_date,
+e.amount as expectedPayment,
+r.amount as receivedPayment,
+r.received_date
+FROM expected_payments e 
+LEFT JOIN received_payments r ON e.id = r.expec_pay_id 
+WHERE e.batch = 'BA-202401';
+"""
+
+pruebaDf = pd.read_sql_query(query, con)
+conciliaciones = [
+    pruebaDf["receivedPayment"].isna(),
+    pruebaDf["receivedPayment"] != pruebaDf["expectedPayment"],
+    pruebaDf["expectedPayment"] == pruebaDf["receivedPayment"]
+]
+
+resultado = [
+    'NO_RECIBIDO', 'MONTO_DIFERENTE', 'CONCILIADO'
+]
+
+pruebaDf["Status"] = np.select(conciliaciones, resultado, 'Other')
+
+print(pruebaDf.head())
+
+
+# app = FastAPI()
+
+# @app.get("/")
+# def root():
+#     return {"message": "API funciona"}
+
+# @app.post("/reconciliation")
+# def reconciliation(batch: str = "BA-202401"): 
+#     cur.execute("SELECT * FROM expected_payments")
