@@ -1,14 +1,3 @@
-import sqlite3
-import pathlib
-import pandas as pd
-import numpy as np
-import requests
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from google import genai
-from datetime import datetime as dt
-
-
 con = sqlite3.connect("databasesCrediclub.db", check_same_thread=False)
 con.row_factory = sqlite3.Row
 con.execute("PRAGMA foreign_keys = 1")
