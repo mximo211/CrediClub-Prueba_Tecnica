@@ -6,6 +6,7 @@ import requests
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from google import genai
+from datetime import datetime as dt
 
 
 con = sqlite3.connect("databasesCrediclub.db", check_same_thread=False)
@@ -78,19 +79,24 @@ def reconciliation(batch: str):
     df['expectedPayment(USD)'] = data['conversion_rates']['USD'] * df['expectedPayment']
     df['receivedPayment(USD)'] = data['conversion_rates']['USD'] * df['receivedPayment']
 
-    client = genai.Client(api_key="AIzaSyCkM74TG7dDKso6HxCRsixiQJVVD3DWeMU")
+    client = genai.Client(api_key="AIzaSyAAh0GamnmkQ4lxRy-vrcMNi-_JaguUX_k")
     response = client.models.generate_content(
         model="gemini-3-flash-preview", contents="Summarize the info inside the dataframe as a data analyst" + df.to_json(orient="records")
     )
 
     df.loc[0, ['Summarize (LLM)']] = response.text
 
-    writer = pd.ExcelWriter('Report.xlsx', mode='w',if_sheet_exists=None)
+    filenameReport = f"Report_" + batch + "_" + dt.now().strftime("%Y-%m-%d") + ".xlsx"
+
+    writer = pd.ExcelWriter(filenameReport, mode='w',if_sheet_exists=None)
     df.to_excel(writer, sheet_name='conciliation_sheet',index=False)
     writer.close()
 
     
-    return FileResponse('Report.xlsx', media_type ='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', filename = 'Report.xlsx')
+
+    return FileResponse(filenameReport, media_type ='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', filename = filenameReport)
+
+
 
 
 
