@@ -1,3 +1,13 @@
+import sqlite3
+import pathlib
+import pandas as pd
+import numpy as np
+import requests
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from google import genai
+from datetime import datetime as dt
+
 con = sqlite3.connect("databasesCrediclub.db", check_same_thread=False)
 con.row_factory = sqlite3.Row
 con.execute("PRAGMA foreign_keys = 1")
@@ -68,7 +78,7 @@ def reconciliation(batch: str):
     df['expectedPayment(USD)'] = data['conversion_rates']['USD'] * df['expectedPayment']
     df['receivedPayment(USD)'] = data['conversion_rates']['USD'] * df['receivedPayment']
 
-    client = genai.Client(api_key="AIzaSyATUcPs1E3l(delete this section including parenthesis)CeG2x_7wv7xlVEXj6bzATpY")
+    client = genai.Client(api_key="AIzaSyATUcPs1E3(delete this section including parenthesis)lCeG2x_7wv7xlVEXj6bzATpY")
     response = client.models.generate_content(
         model="gemini-3-flash-preview", contents="Summarize the info inside the dataframe as a data analyst" + df.to_json(orient="records")
     )
