@@ -20,7 +20,7 @@ cd <repository-folder>
 3. Instalar el requirements txt que incluye todas las librerias para correr el codigo:
 pip install -r requirements.txt
 
-4. En la línea 71 del código es IMPERATIVO borrar del api key el texto "(delete this section including parenthesis)" incluyendo los parentésis.
+4. En la línea 81 del código es IMPERATIVO borrar del api key el texto "(delete this section including parenthesis)" incluyendo los parentésis.
 
    
 ## Correr el código
